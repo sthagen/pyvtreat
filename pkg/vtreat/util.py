@@ -5,19 +5,33 @@ Created on Sat Jul 20 11:40:41 2019
 @author: johnmount
 """
 
+import math
+import warnings
+import statistics
 
 import numpy
-import warnings
-
 import pandas
-import scipy.stats
-import statistics
+
+have_scipy_stats = False
+try:
+    # noinspection PyUnresolvedReferences
+    import scipy.stats
+
+    have_scipy_stats = True
+except ImportError:
+    have_scipy_stats = False
+
+
+def safe_to_numeric_array(x):
+    # work around https://github.com/WinVector/pyvtreat/issues/7
+    # noinspection PyTypeChecker
+    return numpy.asarray(pandas.Series(x) + 0.0, dtype=float)
 
 
 def can_convert_v_to_numeric(x):
     """check if non-empty vector can convert to numeric"""
     try:
-        numpy.asarray(x + 0, dtype=float)
+        numpy.asarray(x + 0.0, dtype=float)
         return True
     except TypeError:
         return False
@@ -26,7 +40,7 @@ def can_convert_v_to_numeric(x):
 def is_bad(x):
     """ for numeric vector x, return logical vector of positions that are null, NaN, infinite"""
     if can_convert_v_to_numeric(x):
-        x = numpy.asarray(x + 0, dtype=float)
+        x = safe_to_numeric_array(x)
         return numpy.logical_or(
             pandas.isnull(x), numpy.logical_or(numpy.isnan(x), numpy.isinf(x))
         )
@@ -34,13 +48,40 @@ def is_bad(x):
 
 
 def has_range(x):
-    x = numpy.asarray(pandas.Series(x)).astype(float)
+    x = safe_to_numeric_array(x)
+    not_bad = numpy.logical_not(is_bad(x))
+    n_not_bad = sum(not_bad)
+    if n_not_bad < 2:
+        return False
+    x = x[not_bad]
     return numpy.max(x) > numpy.min(x)
+
+
+def summarize_column(x, *, fn=numpy.mean):
+    """
+    Summarize column to a non-missing scalar.
+
+    :param x: a vector/Series or column of numbers
+    :param fn: summarize function (such as numpy.mean), only passed non-bad positions
+    :return: scalar float summary of the non-None positions of x (otherwise 0)
+    """
+
+    x = safe_to_numeric_array(x)
+    not_bad = numpy.logical_not(is_bad(x))
+    n_not_bad = sum(not_bad)
+    if n_not_bad < 1:
+        return 0.0
+    x = x[not_bad]
+    v = 0.0 + fn(x)
+    if pandas.isnull(v) or math.isnan(v) or math.isinf(v):
+        return 0.0
+    return v
 
 
 def characterize_numeric(x):
     """compute na count, min,max,mean of a numeric vector"""
-    x = numpy.asarray(pandas.Series(x)).astype(float)
+
+    x = safe_to_numeric_array(x)
     not_bad = numpy.logical_not(is_bad(x))
     n_not_bad = sum(not_bad)
     n = len(x)
@@ -75,6 +116,7 @@ def grouped_by_x_statistics(x, y):
         raise ValueError("no rows")
     if n != len(y):
         raise ValueError("len(y)!=len(x)")
+    y = safe_to_numeric_array(y)
     eps = 1.0e-3
     sf = pandas.DataFrame({"x": x, "y": y})
     sf.reset_index(inplace=True, drop=True)
@@ -110,7 +152,46 @@ def grouped_by_x_statistics(x, y):
     return sf
 
 
-def score_variables(cross_frame, variables, outcome):
+def perm_est_correlation(x, y,
+                         *,
+                         eps=1e-13,
+                         nrounds=10000):
+    """
+    Compute Pearson correlation and permutation test 2-sided significance.
+    Note: smoothed to +1 to avoid reporting zero-significance without sufficient evidence.
+    Uses the numpy pseudo-random number generator.
+
+    :param x: vector of length n.
+    :param y: vector of length n.
+    :param eps: tolerance to check for variation
+    :param nrounds: number of permutation rounds
+    :return:
+    """
+    n = len(x)
+    if len(y) != n:
+        raise ValueError("x and y must be the same length")
+    if (n < 2) or (numpy.max(x) <= eps + numpy.min(x)) or (numpy.max(y) <= eps + numpy.min(y)):
+        return (numpy.Nan, 1.0)
+    # standardize
+    x = x - numpy.mean(x)
+    x = x / math.sqrt(numpy.dot(x, x))
+    y = y - numpy.mean(y)
+    y = y / math.sqrt(numpy.dot(y, y))
+    cor = numpy.dot(x, y)
+    # permutation test for 2-sided significance
+    abs_cor = abs(cor)
+    n_hit = 0.0
+    for rep in range(nrounds):
+        yp = numpy.random.choice(y, n, replace=False)
+        ci = numpy.dot(x, yp)
+        if abs(ci) >= abs_cor:
+            n_hit = n_hit + 1.0
+    sig = (n_hit + 1.0)/(nrounds + 1.0)
+    return (cor, sig)
+
+
+def score_variables(cross_frame, variables, outcome,
+                    permutation_rounds=0):
     """score the linear relation of varaibles to outcomename"""
 
     if len(variables) <= 0:
@@ -118,28 +199,34 @@ def score_variables(cross_frame, variables, outcome):
     n = cross_frame.shape[0]
     if n != len(outcome):
         raise ValueError("len(n) must equal cross_frame.shape[0]")
+    outcome = safe_to_numeric_array(outcome)
+    if (not have_scipy_stats) and (permutation_rounds<=0):
+        permutation_rounds = 10000
 
     def f(v):
         col = cross_frame[v]
-        col = numpy.asarray(col)
-        if n > 0 and numpy.max(col) > numpy.min(col):
+        col = safe_to_numeric_array(col)
+        if (n > 1) and (numpy.max(col) > numpy.min(col)) and (numpy.max(outcome) > numpy.min(outcome)):
             with warnings.catch_warnings():
-                est = scipy.stats.pearsonr(cross_frame[v], outcome)
+                if permutation_rounds>0:
+                    est = perm_est_correlation(col, outcome, nrounds=permutation_rounds)
+                else:
+                    est = scipy.stats.pearsonr(col, outcome)
                 sfi = pandas.DataFrame(
                     {
                         "variable": [v],
-                        "has_range": True,
-                        "PearsonR": est[0],
-                        "significance": est[1],
+                        "has_range": [True],
+                        "PearsonR": [est[0]],
+                        "significance": [est[1]],
                     }
                 )
         else:
             sfi = pandas.DataFrame(
                 {
                     "variable": [v],
-                    "has_range": False,
-                    "PearsonR": numpy.NaN,
-                    "significance": 1,
+                    "has_range": [False],
+                    "PearsonR": [numpy.NaN],
+                    "significance": [1.0],
                 }
             )
         return sfi
@@ -150,3 +237,21 @@ def score_variables(cross_frame, variables, outcome):
     sf = pandas.concat(sf, axis=0, sort=False)
     sf.reset_index(inplace=True, drop=True)
     return sf
+
+
+
+def check_matching_numeric_frames(*, res, expect, tol=1.0e-4):
+    """
+    Check if two numeric pandas.DataFrame s are identical.  assert if not
+    :param res:
+    :param expect:
+    :param tol: numeric tolerance.
+    :return: None
+    """
+    assert isinstance(expect, pandas.DataFrame)
+    assert isinstance(res, pandas.DataFrame)
+    assert res.shape == expect.shape
+    for c in expect.columns:
+        ec = expect[c]
+        rc = res[c]
+        assert numpy.max(numpy.abs(ec - rc)) <= tol

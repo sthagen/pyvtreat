@@ -60,8 +60,10 @@ setuptools.setup(
     install_requires=[
         'numpy',
         'pandas',
-        'scipy',
     ],
+    extras_require={
+        'non_permutation_correlation': ['scipy'],
+    },
     platforms=['any'],
     license='License :: OSI Approved :: BSD 3-clause License',
     python_requires=">=3.5.3",
@@ -74,6 +76,7 @@ setuptools.setup(
           'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8',
           'License :: OSI Approved :: BSD License',
     ],
     long_description=LONG_DESCRIPTION

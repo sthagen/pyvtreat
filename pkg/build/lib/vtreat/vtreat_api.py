@@ -1,3 +1,6 @@
+import warnings
+import pprint
+
 import pandas
 import numpy
 
@@ -27,6 +30,7 @@ def vtreat_parameters(user_params=None):
         "user_transforms": [],
         "sparse_indicators": True,
         "missingness_imputation": numpy.mean,
+        "check_for_duplicate_frames": True,
     }
     if user_params is not None:
         pkeys = set(params.keys())
@@ -66,6 +70,7 @@ class VariableTreatment:
             self, *,
             var_list=None,
             outcome_name=None,
+            outcome_target=None,
             cols_to_copy=None,
             params=None,
             imputation_map=None,
@@ -77,6 +82,7 @@ class VariableTreatment:
         if imputation_map is None:
             imputation_map = {}  # dict
         self.outcome_name_ = outcome_name
+        self.outcome_target_ = outcome_target
         self.var_list_ = [vi for vi in var_list if vi not in set(cols_to_copy)]
         self.cols_to_copy_ = cols_to_copy
         self.params_ = params.copy()
@@ -84,7 +90,8 @@ class VariableTreatment:
         self.plan_ = None
         self.score_frame_ = None
         self.cross_plan_ = None
-        self.n_training_rows_ = None
+        self.last_fit_x_id_ = None
+        self.clear()
 
     def check_column_names(self, col_names):
         to_check = set(self.var_list_)
@@ -95,6 +102,99 @@ class VariableTreatment:
         seen = [c for c in col_names if c in to_check]
         if len(seen) != len(set(seen)):
             raise ValueError("duplicate column names in frame")
+
+    def clear(self):
+        self.plan_ = None
+        self.score_frame_ = None
+        self.cross_plan_ = None
+        self.last_fit_x_id_ = None
+
+    def merge_params(self, p):
+        return vtreat_parameters(p)
+
+    # display methods
+
+    def __repr__(self):
+        fmted = str(self.__class__.__module__) + "." + str(self.__class__.__name__) + '('
+        if self.outcome_name_ is not None:
+            fmted = fmted + "outcome_name=" + pprint.pformat(self.outcome_name_) + ",\n"
+        if self.outcome_target_ is not None:
+            fmted = fmted + "outcome_target=" + pprint.pformat(self.outcome_target_) + ",\n"
+        if (self.var_list_ is not None) and (len(self.var_list_) > 0):
+            fmted = fmted + "var_list=" + pprint.pformat(self.var_list_) + ",\n"
+        if (self.cols_to_copy_ is not None) and (len(self.cols_to_copy_) > 0):
+            fmted = fmted + "cols_to_copy=" + pprint.pformat(self.cols_to_copy_) + ",\n"
+        if (self.params_ is not None) and (len(self.params_) > 0):
+            fmted = fmted + "params=" + pprint.pformat(self.params_) + ",\n"
+        if (self.imputation_map_ is not None) and (len(self.imputation_map_) > 0):
+            fmted = fmted + "imputation_map=" + pprint.pformat(self.imputation_map_) + ",\n"
+        fmted = fmted + ')'
+        return fmted
+
+    def __str__(self):
+        return self.__repr__()
+
+    # sklearn pipeline step methods
+
+    # noinspection PyPep8Naming
+    def fit(self, X, y=None):
+        raise NotImplementedError("base class method called")
+
+    # noinspection PyPep8Naming
+    def fit_transform(self, X, y=None):
+        raise NotImplementedError("base class method called")
+
+    def get_feature_names(self, input_features=None):
+        if self.score_frame_ is None:
+            raise ValueError("get_feature_names called on uninitialized vtreat transform")
+        new_vars = [self.score_frame_['variable'][i] for i in range(self.score_frame_.shape[0])
+                    if self.score_frame_['has_range'][i]
+                    and (input_features is None or self.score_frame_['variable'][i] in input_features)]
+        new_vars = new_vars + self.cols_to_copy_
+        return new_vars
+
+    # noinspection PyUnusedLocal
+    def get_params(self, deep=False):
+        params = {k: v for k, v in self.params_.items()}
+        if self.outcome_name_ is not None:
+            params['outcome_name'] = self.outcome_name_
+        if self.outcome_target_ is not None:
+            params['outcome_target'] = self.outcome_target_
+        if (self.var_list_ is not None) and (len(self.var_list_) > 0):
+            params['var_list'] = self.var_list_
+        if (self.cols_to_copy_ is not None) and (len(self.cols_to_copy_) > 0):
+            params['cols_to_copy'] = self.cols_to_copy_
+        if (self.imputation_map_ is not None) and (len(self.imputation_map_) > 0):
+            params['imputation_map'] = self.imputation_map_
+        return params
+
+    def set_params(self, **params):
+        self.clear()
+        p = {k: v for k, v in params.items()}
+        if 'outcome_name' in p.keys():
+            self.outcome_name_ = p['outcome_name']
+            del p['outcome_name']
+        if 'outcome_target' in p.keys():
+            self.outcome_target_ = p['outcome_target']
+            del p['outcome_target']
+        if 'var_list' in p.keys():
+            self.var_list_ = p['var_list']
+            del p['var_list']
+        if 'cols_to_copy' in p.keys():
+            self.cols_to_copy_ = p['cols_to_copy']
+            del p['cols_to_copy']
+        if 'imputation_map' in p.keys():
+            self.imputation_map_ = p['imputation_map']
+            del p['imputation_map']
+        self.params_ = self.merge_params(p)
+
+    # noinspection PyPep8Naming
+    def inverse_transform(self, X):
+        raise TypeError("vtreat does not support inverse_transform")
+
+    # noinspection PyPep8Naming
+    def transform(self, X):
+        raise NotImplementedError("base class method called")
 
 
 class NumericOutcomeTreatment(VariableTreatment):
@@ -116,7 +216,7 @@ class NumericOutcomeTreatment(VariableTreatment):
          :param params: vtreat.vtreat_parameters()
          :param imputation_map: map of column names to custom missing imputation values or functions
         """
-        params = vtreat_parameters(params)
+        params = self.merge_params(params)
         VariableTreatment.__init__(
             self,
             var_list=var_list,
@@ -127,7 +227,7 @@ class NumericOutcomeTreatment(VariableTreatment):
         )
 
     # noinspection PyPep8Naming
-    def fit(self, X, y):
+    def fit(self, X, y=None):
         if not isinstance(X, pandas.DataFrame):
             raise TypeError("X should be a Pandas DataFrame")
         self.check_column_names(X.columns)
@@ -143,6 +243,11 @@ class NumericOutcomeTreatment(VariableTreatment):
         if not isinstance(X, pandas.DataFrame):
             raise TypeError("X should be a Pandas DataFrame")
         self.check_column_names(X.columns)
+        if self.last_fit_x_id_ is None:
+            raise ValueError("called transform on not yet fit treatment")
+        if self.params_['check_for_duplicate_frames'] and (self.last_fit_x_id_ == id(X)):
+            warnings.warn(
+                "possibly called transform on same data used to fit (this causes over-fit, please use fit_transform() instead)")
         res = vtreat_impl.pre_prep_frame(
             X, col_list=self.var_list_, cols_to_copy=self.cols_to_copy_
         )
@@ -151,7 +256,7 @@ class NumericOutcomeTreatment(VariableTreatment):
         return res
 
     # noinspection PyPep8Naming
-    def fit_transform(self, X, y):
+    def fit_transform(self, X, y=None):
         if not isinstance(X, pandas.DataFrame):
             raise TypeError("X should be a Pandas DataFrame")
         self.check_column_names(X.columns)
@@ -164,6 +269,8 @@ class NumericOutcomeTreatment(VariableTreatment):
             raise ValueError("y should not have any missing/NA/NaN values")
         if numpy.max(y) <= numpy.min(y):
             raise ValueError("y does not vary")
+        self.clear()
+        self.last_fit_x_id_ = id(X)
         X = vtreat_impl.pre_prep_frame(
             X, col_list=self.var_list_, cols_to_copy=self.cols_to_copy_
         )
@@ -172,7 +279,6 @@ class NumericOutcomeTreatment(VariableTreatment):
         # model for independent transforms
         self.plan_ = None
         self.score_frame_ = None
-        self.n_training_rows_ = X.shape[0]
         self.plan_ = vtreat_impl.fit_numeric_outcome_treatment(
             X=X,
             y=y,
@@ -229,19 +335,19 @@ class BinomialOutcomeTreatment(VariableTreatment):
          :param params: vtreat.vtreat_parameters()
          :param imputation_map: map of column names to custom missing imputation values or functions
         """
-        params = vtreat_parameters(params)
+        params = self.merge_params(params)
         VariableTreatment.__init__(
             self,
             var_list=var_list,
             outcome_name=outcome_name,
+            outcome_target=outcome_target,
             cols_to_copy=cols_to_copy,
             params=params,
             imputation_map=imputation_map,
         )
-        self.outcome_target_ = outcome_target
 
     # noinspection PyPep8Naming
-    def fit(self, X, y):
+    def fit(self, X, y=None):
         if not isinstance(X, pandas.DataFrame):
             raise TypeError("X should be a Pandas DataFrame")
         self.check_column_names(X.columns)
@@ -257,6 +363,11 @@ class BinomialOutcomeTreatment(VariableTreatment):
         if not isinstance(X, pandas.DataFrame):
             raise TypeError("X should be a Pandas DataFrame")
         self.check_column_names(X.columns)
+        if self.last_fit_x_id_ is None:
+            raise ValueError("called transform on not yet fit treatment")
+        if self.params_['check_for_duplicate_frames'] and (self.last_fit_x_id_ == id(X)):
+            warnings.warn(
+                "possibly called transform on same data used to fit (this causes over-fit, please use fit_transform() instead)")
         X = vtreat_impl.pre_prep_frame(
             X, col_list=self.var_list_, cols_to_copy=self.cols_to_copy_
         )
@@ -265,7 +376,7 @@ class BinomialOutcomeTreatment(VariableTreatment):
         return res
 
     # noinspection PyPep8Naming
-    def fit_transform(self, X, y):
+    def fit_transform(self, X, y=None):
         if not isinstance(X, pandas.DataFrame):
             raise TypeError("X should be a Pandas DataFrame")
         self.check_column_names(X.columns)
@@ -276,6 +387,8 @@ class BinomialOutcomeTreatment(VariableTreatment):
         y_mean = numpy.mean(y == self.outcome_target_)
         if y_mean <= 0 or y_mean >= 1:
             raise ValueError("y==outcome_target does not vary")
+        self.clear()
+        self.last_fit_x_id_ = id(X)
         X = vtreat_impl.pre_prep_frame(
             X, col_list=self.var_list_, cols_to_copy=self.cols_to_copy_
         )
@@ -284,7 +397,6 @@ class BinomialOutcomeTreatment(VariableTreatment):
         # model for independent transforms
         self.plan_ = None
         self.score_frame_ = None
-        self.n_training_rows_ = X.shape[0]
         self.plan_ = vtreat_impl.fit_binomial_outcome_treatment(
             X=X,
             y=y,
@@ -346,7 +458,7 @@ class MultinomialOutcomeTreatment(VariableTreatment):
          :param imputation_map: map of column names to custom missing imputation values or functions
         """
 
-        params = vtreat_parameters(params)
+        params = self.merge_params(params)
         VariableTreatment.__init__(
             self,
             var_list=var_list,
@@ -358,7 +470,7 @@ class MultinomialOutcomeTreatment(VariableTreatment):
         self.outcomes_ = None
 
     # noinspection PyPep8Naming
-    def fit(self, X, y):
+    def fit(self, X, y=None):
         if not isinstance(X, pandas.DataFrame):
             raise TypeError("X should be a Pandas DataFrame")
         self.check_column_names(X.columns)
@@ -374,6 +486,11 @@ class MultinomialOutcomeTreatment(VariableTreatment):
         if not isinstance(X, pandas.DataFrame):
             raise TypeError("X should be a Pandas DataFrame")
         self.check_column_names(X.columns)
+        if self.last_fit_x_id_ is None:
+            raise ValueError("called transform on not yet fit treatment")
+        if self.params_['check_for_duplicate_frames'] and (self.last_fit_x_id_ == id(X)):
+            warnings.warn(
+                "possibly called transform on same data used to fit (this causes over-fit, please use fit_transform() instead)")
         X = vtreat_impl.pre_prep_frame(
             X, col_list=self.var_list_, cols_to_copy=self.cols_to_copy_
         )
@@ -382,7 +499,7 @@ class MultinomialOutcomeTreatment(VariableTreatment):
         return res
 
     # noinspection PyPep8Naming
-    def fit_transform(self, X, y):
+    def fit_transform(self, X, y=None):
         if not isinstance(X, pandas.DataFrame):
             raise TypeError("X should be a Pandas DataFrame")
         self.check_column_names(X.columns)
@@ -392,6 +509,8 @@ class MultinomialOutcomeTreatment(VariableTreatment):
             raise ValueError("X.shape[0] should equal len(y)")
         if len(numpy.unique(y)) <= 1:
             raise ValueError("y must take on at least 2 values")
+        self.clear()
+        self.last_fit_x_id_ = id(X)
         X = vtreat_impl.pre_prep_frame(
             X, col_list=self.var_list_, cols_to_copy=self.cols_to_copy_
         )
@@ -400,7 +519,6 @@ class MultinomialOutcomeTreatment(VariableTreatment):
         # model for independent transforms
         self.plan_ = None
         self.score_frame_ = None
-        self.n_training_rows_ = X.shape[0]
         self.outcomes_ = numpy.unique(y)
         self.plan_ = vtreat_impl.fit_multinomial_outcome_treatment(
             X=X,
@@ -464,7 +582,7 @@ class UnsupervisedTreatment(VariableTreatment):
         :param params: vtreat.unsupervised_parameters()
         :param imputation_map: map of column names to custom missing imputation values or functions
         """
-        params = unsupervised_parameters(params)
+        params = self.merge_params(params)
         VariableTreatment.__init__(
             self,
             var_list=var_list,
@@ -473,6 +591,9 @@ class UnsupervisedTreatment(VariableTreatment):
             params=params,
             imputation_map=imputation_map,
         )
+
+    def merge_params(self, p):
+        return unsupervised_parameters(p)
 
     # noinspection PyPep8Naming
     def fit(self, X, y=None):
@@ -489,6 +610,8 @@ class UnsupervisedTreatment(VariableTreatment):
         if not isinstance(X, pandas.DataFrame):
             raise TypeError("X should be a Pandas DataFrame")
         self.check_column_names(X.columns)
+        if self.last_fit_x_id_ is None:
+            raise ValueError("called transform on not yet fit treatment")
         X = vtreat_impl.pre_prep_frame(
             X, col_list=self.var_list_, cols_to_copy=self.cols_to_copy_
         )
@@ -503,10 +626,11 @@ class UnsupervisedTreatment(VariableTreatment):
         self.check_column_names(X.columns)
         if y is not None:
             raise ValueError("y should be None")
+        self.clear()
+        self.last_fit_x_id_ = id(X)
         X = vtreat_impl.pre_prep_frame(
             X, col_list=self.var_list_, cols_to_copy=self.cols_to_copy_
         )
-        self.n_training_rows_ = X.shape[0]
         self.plan_ = vtreat_impl.fit_unsupervised_treatment(
             X=X,
             var_list=self.var_list_,

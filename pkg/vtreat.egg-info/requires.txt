@@ -1,3 +1,9 @@
 numpy
 pandas
-statsmodels
+scipy
+
+[all]
+sklearn
+
+[pseudoR2]
+sklearn

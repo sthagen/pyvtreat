@@ -534,10 +534,10 @@ overfit_result.summary()
   <th>Method:</th>             <td>Least Squares</td>  <th>  F-statistic:       </th> <td>   43.52</td>
 </tr>
 <tr>
-  <th>Date:</th>             <td>Thu, 12 Mar 2020</td> <th>  Prob (F-statistic):</th> <td>5.29e-30</td>
+  <th>Date:</th>             <td>Sat, 14 Mar 2020</td> <th>  Prob (F-statistic):</th> <td>5.29e-30</td>
 </tr>
 <tr>
-  <th>Time:</th>                 <td>10:48:07</td>     <th>  Log-Likelihood:    </th> <td> -60.214</td>
+  <th>Time:</th>                 <td>13:48:47</td>     <th>  Log-Likelihood:    </th> <td> -60.214</td>
 </tr>
 <tr>
   <th>No. Observations:</th>      <td>   100</td>      <th>  AIC:               </th> <td>   142.4</td>
@@ -772,10 +772,10 @@ overfit_result_2.summary()
   <th>Method:</th>             <td>Least Squares</td>  <th>  F-statistic:       </th> <td>1.305e+31</td>
 </tr>
 <tr>
-  <th>Date:</th>             <td>Thu, 12 Mar 2020</td> <th>  Prob (F-statistic):</th>  <td>  0.00</td>  
+  <th>Date:</th>             <td>Sat, 14 Mar 2020</td> <th>  Prob (F-statistic):</th>  <td>  0.00</td>  
 </tr>
 <tr>
-  <th>Time:</th>                 <td>10:48:09</td>     <th>  Log-Likelihood:    </th> <td>  3204.2</td> 
+  <th>Time:</th>                 <td>13:48:50</td>     <th>  Log-Likelihood:    </th> <td>  3204.2</td> 
 </tr>
 <tr>
   <th>No. Observations:</th>      <td>   100</td>      <th>  AIC:               </th> <td>  -6404.</td> 
@@ -1124,10 +1124,10 @@ proper_fit_result.summary()
   <th>Method:</th>             <td>Least Squares</td>  <th>  F-statistic:       </th> <td>   1.265</td>
 </tr>
 <tr>
-  <th>Date:</th>             <td>Thu, 12 Mar 2020</td> <th>  Prob (F-statistic):</th>  <td> 0.258</td> 
+  <th>Date:</th>             <td>Sat, 14 Mar 2020</td> <th>  Prob (F-statistic):</th>  <td> 0.258</td> 
 </tr>
 <tr>
-  <th>Time:</th>                 <td>10:48:09</td>     <th>  Log-Likelihood:    </th> <td> -141.53</td>
+  <th>Time:</th>                 <td>13:48:51</td>     <th>  Log-Likelihood:    </th> <td> -141.53</td>
 </tr>
 <tr>
   <th>No. Observations:</th>      <td>   100</td>      <th>  AIC:               </th> <td>   307.1</td>
@@ -1518,27 +1518,27 @@ relns_x
     </tr>
     <tr>
       <th>1095</th>
-      <td>0.004014</td>
-      <td>0.004014</td>
-      <td>0.004014</td>
+      <td>0.014925</td>
+      <td>0.014925</td>
+      <td>0.014925</td>
       <td>0.000000</td>
       <td>0.000000</td>
       <td>0.000000</td>
-      <td>0.004014</td>
+      <td>0.014925</td>
       <td>0.000000</td>
-      <td>0.004014</td>
-      <td>0.004014</td>
+      <td>0.014925</td>
+      <td>0.014925</td>
       <td>...</td>
-      <td>0.004014</td>
-      <td>0.004014</td>
-      <td>0.004014</td>
-      <td>0.004014</td>
+      <td>0.014925</td>
+      <td>0.014925</td>
+      <td>0.014925</td>
+      <td>0.014925</td>
       <td>0.000000</td>
       <td>0.000000</td>
-      <td>0.004014</td>
+      <td>0.014925</td>
       <td>0.000000</td>
-      <td>0.004014</td>
-      <td>0.369543</td>
+      <td>0.014925</td>
+      <td>0.014925</td>
     </tr>
     <tr>
       <th>1096</th>
@@ -1567,74 +1567,74 @@ relns_x
     <tr>
       <th>1097</th>
       <td>0.000000</td>
-      <td>0.004075</td>
+      <td>0.001806</td>
       <td>0.000000</td>
-      <td>0.004075</td>
-      <td>0.004075</td>
-      <td>0.004075</td>
+      <td>0.001806</td>
+      <td>0.001806</td>
+      <td>0.001806</td>
       <td>0.000000</td>
-      <td>0.004075</td>
+      <td>0.001806</td>
       <td>0.000000</td>
       <td>0.000000</td>
       <td>...</td>
-      <td>0.004075</td>
+      <td>0.001806</td>
       <td>0.000000</td>
-      <td>0.004075</td>
-      <td>0.004075</td>
-      <td>0.004075</td>
-      <td>0.004075</td>
-      <td>0.004075</td>
-      <td>0.004075</td>
+      <td>0.001806</td>
+      <td>0.001806</td>
+      <td>0.001806</td>
+      <td>0.001806</td>
+      <td>0.001806</td>
+      <td>0.001806</td>
       <td>0.000000</td>
       <td>0.000000</td>
     </tr>
     <tr>
       <th>1098</th>
       <td>0.014925</td>
+      <td>0.014925</td>
+      <td>0.014925</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
       <td>0.000000</td>
       <td>0.014925</td>
-      <td>0.014925</td>
-      <td>0.014925</td>
-      <td>0.014925</td>
-      <td>0.014925</td>
-      <td>0.014925</td>
+      <td>0.000000</td>
       <td>0.014925</td>
       <td>0.014925</td>
       <td>...</td>
-      <td>0.000000</td>
       <td>0.014925</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
+      <td>0.014925</td>
       <td>0.014925</td>
       <td>0.014925</td>
       <td>0.000000</td>
+      <td>0.000000</td>
       <td>0.014925</td>
+      <td>0.000000</td>
       <td>0.014925</td>
       <td>0.014925</td>
     </tr>
     <tr>
       <th>1099</th>
-      <td>0.014925</td>
       <td>0.000000</td>
-      <td>0.014925</td>
-      <td>0.014925</td>
-      <td>0.014925</td>
-      <td>0.014925</td>
-      <td>0.014925</td>
-      <td>0.014925</td>
-      <td>0.014925</td>
-      <td>0.014925</td>
+      <td>0.015152</td>
+      <td>0.000000</td>
+      <td>0.015152</td>
+      <td>0.015152</td>
+      <td>0.015152</td>
+      <td>0.000000</td>
+      <td>0.015152</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
       <td>...</td>
+      <td>0.015152</td>
       <td>0.000000</td>
-      <td>0.014925</td>
+      <td>0.015152</td>
+      <td>0.015152</td>
+      <td>0.015152</td>
+      <td>0.015152</td>
+      <td>0.015152</td>
+      <td>0.015152</td>
       <td>0.000000</td>
       <td>0.000000</td>
-      <td>0.014925</td>
-      <td>0.014925</td>
-      <td>0.000000</td>
-      <td>0.014925</td>
-      <td>0.014925</td>
-      <td>0.014925</td>
     </tr>
   </tbody>
 </table>
@@ -1708,38 +1708,38 @@ relns_y
     </tr>
     <tr>
       <th>1095</th>
-      <td>-0.992296</td>
-      <td>61</td>
+      <td>0.160505</td>
+      <td>64</td>
       <td>10</td>
-      <td>nl_4</td>
+      <td>nl_17</td>
     </tr>
     <tr>
       <th>1096</th>
       <td>0.160505</td>
-      <td>84</td>
+      <td>17</td>
       <td>10</td>
-      <td>nl_30</td>
+      <td>nl_17</td>
     </tr>
     <tr>
       <th>1097</th>
-      <td>0.489135</td>
-      <td>89</td>
+      <td>-0.385604</td>
+      <td>35</td>
       <td>10</td>
-      <td>nl_12</td>
+      <td>nl_17</td>
     </tr>
     <tr>
       <th>1098</th>
-      <td>0.053041</td>
-      <td>44</td>
+      <td>0.160505</td>
+      <td>49</td>
       <td>10</td>
-      <td>nl_12</td>
+      <td>nl_17</td>
     </tr>
     <tr>
       <th>1099</th>
-      <td>0.053041</td>
-      <td>31</td>
+      <td>0.055096</td>
+      <td>81</td>
       <td>10</td>
-      <td>nl_12</td>
+      <td>nl_46</td>
     </tr>
   </tbody>
 </table>
@@ -1804,7 +1804,7 @@ r2
 
 
 
-    0.9993249813376301
+    0.9993249813376286
 
 
 
@@ -1830,6 +1830,8 @@ _ = matplotlib.pyplot.plot(
 
 
 Again: what we have shown is that even when we target encode a set of pure noise variables using cross-methods, we can still recover `y_example` from the encoded variables. This means that the encoded noise variables can still potentially appear informative about `y_example` when used in a downstream model: cross-methods still leak information about the output variable.
+
+For a related (and much simpler to exploit) outcome leak, please see ["Multiple Split Cross-Validation Data Leak"](https://github.com/WinVector/pyvtreat/blob/master/Examples/CrossVal/LeakTradeOff/RepeatCrossFrame.ipynb).
 
 Does this mean we shouldn't use cross-methods? Not necessarily. We'll discuss this more, below.
 
@@ -2586,23 +2588,29 @@ sig_frame = pandas.DataFrame({
     'variable_type': [str_strip.sub('', v) for v in 
                       vtreat_coder.score_frame_['variable']]
     })
-splt = seaborn.kdeplot(
+splt = seaborn.distplot(
     sig_frame['significance'][sig_frame['variable_type'] == 'noise'], 
-    color="r",
-    shade=True,
-    label='noise significance')
-splt = seaborn.kdeplot(
-    sig_frame['significance'][sig_frame['variable_type'] == 'signal'], 
-    color="b",
-    shade=True,
-    label='signal significance')
+    bins = 5
+)
 splt.set(xlim=(0,1))
-splt.set_yscale('log')
-_ =splt.set_title('distribution of training R2 grouped by variable type\n(log y scale)')
+_ =splt.set_title('distribution of training R2 (noise variables)')
 ```
 
 
 ![png](output_52_0.png)
+
+
+
+```python
+splt = seaborn.distplot(
+    sig_frame['significance'][sig_frame['variable_type'] == 'signal']
+)
+splt.set(xlim=(0,1))
+_ =splt.set_title('distribution of training R2 (signal variables)')
+```
+
+
+![png](output_53_0.png)
 
 
 It is as we would hope: the signaling variables have p-values concentrated near zero, and the noise variables have significances that are uniformly distributed in the interval `[0, 1]`.
@@ -2644,10 +2652,10 @@ good_fit.summary()
   <th>Method:</th>             <td>Least Squares</td>  <th>  F-statistic:       </th> <td>   29.31</td>
 </tr>
 <tr>
-  <th>Date:</th>             <td>Thu, 12 Mar 2020</td> <th>  Prob (F-statistic):</th> <td>4.52e-27</td>
+  <th>Date:</th>             <td>Sat, 14 Mar 2020</td> <th>  Prob (F-statistic):</th> <td>4.52e-27</td>
 </tr>
 <tr>
-  <th>Time:</th>                 <td>10:48:14</td>     <th>  Log-Likelihood:    </th> <td> -136.14</td>
+  <th>Time:</th>                 <td>13:48:54</td>     <th>  Log-Likelihood:    </th> <td> -136.14</td>
 </tr>
 <tr>
   <th>No. Observations:</th>      <td>   100</td>      <th>  AIC:               </th> <td>   304.3</td>
@@ -2787,7 +2795,7 @@ _ = splot.set_title('distribution of test R2 under repeated draws')
 ```
 
 
-![png](output_59_0.png)
+![png](output_60_0.png)
 
 
 We expect that `category_encoders.target_encoder.TargetEncoder` would also handle the above example correctly.  And we could write code to break `vtreat`, just as we wrote code to break `category_encoders.target_encoder.TargetEncoder`. 
